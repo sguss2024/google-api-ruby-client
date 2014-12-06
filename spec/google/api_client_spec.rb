@@ -24,19 +24,19 @@ shared_examples_for 'configurable user agent' do
   
   it 'should allow the user agent to be modified' do
     client.user_agent = 'Custom User Agent/1.2.3'
-    client.user_agent.should == 'Custom User Agent/1.2.3'
+    expect(client.user_agent).to eq 'Custom User Agent/1.2.3'
   end
 
   it 'should allow the user agent to be set to nil' do
     client.user_agent = nil
-    client.user_agent.should == nil
+    expect(client.user_agent).to be nil
   end
 
   it 'should not allow the user agent to be used with bogus values' do
-    (lambda do
+    expect(lambda do
       client.user_agent = 42
       client.execute(:uri=>'https://www.google.com/')
-    end).should raise_error(TypeError)
+    end).to raise_error(TypeError)
   end
 
   it 'should transmit a User-Agent header when sending requests' do
@@ -45,8 +45,8 @@ shared_examples_for 'configurable user agent' do
     conn = stub_connection do |stub|
       stub.get('/') do |env|
         headers = env[:request_headers]
-        headers.should have_key('User-Agent')
-        headers['User-Agent'].should == client.user_agent
+        expect(headers).to have_key('User-Agent')
+        expect(headers['User-Agent']).to eq client.user_agent
         [200, {}, ['']]
       end
     end
@@ -61,11 +61,11 @@ describe Google::APIClient do
   let(:client) { Google::APIClient.new(:application_name => 'API Client Tests') }
 
   it 'should make its version number available' do
-    Google::APIClient::VERSION::STRING.should be_instance_of(String)
+    expect(Google::APIClient::VERSION::STRING).to be_instance_of(String)
   end
 
   it 'should default to OAuth 2' do
-    Signet::OAuth2::Client.should === client.authorization
+    expect(client.authorization).to be_instance_of(Signet::OAuth2::Client)
   end
 
   describe 'configure for no authentication' do
@@ -83,15 +83,15 @@ describe Google::APIClient do
     end
 
     it 'should use the default OAuth1 client configuration' do
-      client.authorization.temporary_credential_uri.to_s.should ==
-        'https://www.google.com/accounts/OAuthGetRequestToken'
-      client.authorization.authorization_uri.to_s.should include(
+      expect(client.authorization.temporary_credential_uri.to_s).to eq (
+        'https://www.google.com/accounts/OAuthGetRequestToken')
+      expect(client.authorization.authorization_uri.to_s).to include(
         'https://www.google.com/accounts/OAuthAuthorizeToken'
       )
-      client.authorization.token_credential_uri.to_s.should ==
-        'https://www.google.com/accounts/OAuthGetAccessToken'
-      client.authorization.client_credential_key.should == 'anonymous'
-      client.authorization.client_credential_secret.should == 'anonymous'
+      expect(client.authorization.token_credential_uri.to_s).to eq (
+        'https://www.google.com/accounts/OAuthGetAccessToken')
+      expect(client.authorization.client_credential_key).to eq 'anonymous'
+      expect(client.authorization.client_credential_secret).to eq 'anonymous'
     end
 
     it_should_behave_like 'configurable user agent'
@@ -113,7 +113,7 @@ describe Google::APIClient do
       client.authorization = :oauth_2
       @connection = stub_connection do |stub|
         stub.post('/prediction/v1.2/training?data=12345') do |env|
-          env[:request_headers]['Authorization'].should == 'Bearer 12345'
+          expect(env[:request_headers]['Authorization']).to eq 'Bearer 12345'
         end
       end
     end
